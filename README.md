@@ -56,7 +56,7 @@ NEXT_PUBLIC_COPILOT_API_KEY=your-copilot-api-key
 LANGSMITH_TRACING=true
 LANGSMITH_ENDPOINT="https://api.smith.langchain.com"
 LANGSMITH_API_KEY=your-langsmith-api-key
-LANGSMITH_PROJECT="pr-virtual-flick-55"
+LANGSMITH_PROJECT=your-langsmith-project-name
 
 # AI Model API Keys
 GOOGLE_API_KEY=your-google-gemini-api-key
