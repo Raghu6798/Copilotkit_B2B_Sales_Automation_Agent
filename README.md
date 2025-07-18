@@ -84,7 +84,7 @@ cd sample_agent
 langgraph dev --port 8123
 ```
 
-The backend will be available at `http://localhost:8123/copilotkit`.
+The backend will be available at `http://localhost:8123`.
 
 ---
 
