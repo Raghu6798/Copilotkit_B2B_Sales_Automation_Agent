@@ -84,7 +84,7 @@ cd sample_agent
 langgraph dev --port 8123
 ```
 
-The backend will be available at `http://localhost:8123`.
+The Langgraph studio UI 🎨 will be available at `(https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:8123)`.
 
 ---
 
@@ -140,7 +140,9 @@ company_research_agui/
 | **HubSpot** | `HUBSPOT_API_KEY` | Private app token for HubSpot CRM |
 | **YouTube** | `YOUTUBE_API_KEY` | API key for YouTube data access |
 | **LangSmith** | `LANGSMITH_API_KEY` | API key for LangSmith tracing (optional) |
-| **CopilotKit** | `NEXT_PUBLIC_COPILOT_API_KEY` | API key for CopilotKit services |
+| **CopilotKit** | `NEXT_PUBLIC_COPILOT_API_KEY` | API key for CopilotKit services |   ## Grab Your Copilotkit api key at https://cloud.copilotkit.ai/
+
+
 
 ### Configuration Details
 
