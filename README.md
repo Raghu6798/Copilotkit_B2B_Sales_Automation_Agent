@@ -81,9 +81,7 @@ SHEET_ID=your-google-sheet-id
 
 ```sh
 cd sample_agent
-python demo.py
-# Or, using uvicorn directly:
-uvicorn sample_agent.demo:app --host 0.0.0.0 --port 8123 --reload
+langgraph dev --port 8123
 ```
 
 The backend will be available at `http://localhost:8123/copilotkit`.
