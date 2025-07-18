@@ -140,7 +140,7 @@ company_research_agui/
 | **HubSpot** | `HUBSPOT_API_KEY` | Private app token for HubSpot CRM |
 | **YouTube** | `YOUTUBE_API_KEY` | API key for YouTube data access |
 | **LangSmith** | `LANGSMITH_API_KEY` | API key for LangSmith tracing (optional) |
-| **CopilotKit** | `NEXT_PUBLIC_COPILOT_API_KEY` | API key for CopilotKit services |   ## Grab Your Copilotkit api key at https://cloud.copilotkit.ai/
+| **CopilotKit** | `NEXT_PUBLIC_COPILOT_API_KEY` | API key for CopilotKit services |  
 
 
 
@@ -171,13 +171,14 @@ company_research_agui/
 
 ## Getting API Keys
 
-1. **Google Gemini:** Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. **Serper:** Sign up at [Serper.dev](https://serper.dev) for search API access
-3. **RapidAPI:** Create an account at [RapidAPI](https://rapidapi.com) and subscribe to LinkedIn scraper services
-4. **Airtable:** Generate a personal access token from your [Airtable account](https://airtable.com/account)
-5. **HubSpot:** Create a private app in your HubSpot developer account
-6. **YouTube:** Get an API key from [Google Cloud Console](https://console.cloud.google.com)
-7. **LangSmith:** Sign up at [LangSmith](https://smith.langchain.com) for AI application monitoring
+1. **Copilotkit Public API key:** Grab Your Copilotkit api key at https://cloud.copilotkit.ai/
+2. **Google Gemini:** Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+3. **Serper:** Sign up at [Serper.dev](https://serper.dev) for search API access
+4. **RapidAPI:** Create an account at [RapidAPI](https://rapidapi.com) and subscribe to LinkedIn scraper services
+5. **Airtable:** Generate a personal access token from your [Airtable account](https://airtable.com/account)
+6. **HubSpot:** Create a private app in your HubSpot developer account
+7. **YouTube:** Get an API key from [Google Cloud Console](https://console.cloud.google.com)
+8. **LangSmith:** Sign up at [LangSmith](https://smith.langchain.com) for AI application monitoring
 
 ---
 
