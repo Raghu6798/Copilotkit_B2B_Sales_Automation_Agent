@@ -183,7 +183,7 @@ company_research_agui/
 ---
 
 ## Contact & Credits
-- LangGraph Agent Development: The core LangGraph agent was built by Aymen Mir. For questions about the agent logic, tools, and backend implementation, contact him at aymenMir1001@gmail.com.
+- LangGraph Agent Development: The core LangGraph agent was built by Aymen Mir. For questions about the agent logic, tools, and backend implementation, contact him at aymenMir1001@gmail.com. and the Link to the Repository : [AI-Sales-Outreach-Automation](https://github.com/kaymen99/sales-outreach-automation-langgraph)
 - CopilotKit AG-UI Implementation: The CopilotKit integration and frontend UI were implemented by Raghu Nandan.
 
 
