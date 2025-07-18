@@ -19,8 +19,8 @@ A full-stack AI-powered B2B sales research and outreach automation agent, combin
 ### 1. Clone the repository
 
 ```sh
-git clone https://github.com/yourusername/yourrepo.git
-cd yourrepo/company_research_agui
+git clone https://github.com/Raghu6798/Copilotkit_B2B_Sales_Automation_Agent.git
+cd Copilotkit_B2B_Sales_Automation_Agent
 ```
 
 ---
@@ -31,14 +31,14 @@ cd yourrepo/company_research_agui
 
 ```sh
 cd agent
-python -m venv .venv
+uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
 #### b. Install dependencies
 
 ```sh
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 #### c. Configure environment variables
