@@ -1,0 +1,145 @@
+.page-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f0f2f5;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.dashboard-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.start-button {
+  background-color: #007aff;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.start-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.start-button:disabled {
+  background-color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+.dashboard-body {
+  display: flex;
+  min-height: 70vh;
+}
+
+.status-panel {
+  width: 35%;
+  padding: 1.5rem;
+  border-right: 1px solid #e8e8e8;
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.reports-panel {
+  width: 65%;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.status-card, .results-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.status-card h3, .results-card h3 {
+  margin-top: 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.report-tabs {
+  display: flex;
+  border-bottom: 1px solid #e8e8e8;
+  margin-bottom: 1rem;
+}
+
+.tab-button {
+  padding: 0.75rem 1.25rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  color: #555;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-button.active {
+  color: #007aff;
+  border-bottom-color: #007aff;
+  font-weight: 600;
+}
+
+.report-content {
+  line-height: 1.6;
+}
+
+.report-content h1, .report-content h2, .report-content h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Add these new styles to app/copilotkit/style.css */
+
+.prompt-section {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.prompt-textarea {
+  flex-grow: 1;
+  min-height: 80px;
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  padding: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.prompt-textarea:focus {
+  outline: none;
+  border-color: #007aff;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+/* We already have styles for .start-button */

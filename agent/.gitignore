@@ -1,0 +1,61 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc
+*.pyo
+*.pyd
+*.py.class
+
+# Environment and secrets
+.env
+.env.*
+*.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Logs
+*.log
+
+# Vercel/Netlify/Deployment
+.vercel
+.netlify
+.next
+# Node/JS (if any frontend)
+node_modules/
+
+# Misc
+*.bak
+*.swp
+*.swo
+
+# Reports and local output
+data/
+reports/
+
+# Google API tokens
+credentials.json
+token.json
+
