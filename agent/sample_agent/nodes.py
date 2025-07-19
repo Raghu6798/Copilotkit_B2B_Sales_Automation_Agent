@@ -62,7 +62,7 @@ class OutReachAutomationNodes:
             current_lead = state["leads_data"].pop()
         print(Fore.YELLOW + f"----- Current lead selected: {current_lead} -----\n" + Style.RESET_ALL)
         logger.info("Current lead selected: {}", current_lead)
-        return {"current_lead": current_lead}
+        return {"current_lead": current_lead, "number_leads": len(state["leads_data"])}
 
     @staticmethod
     def check_if_there_more_leads(state: GraphState):
@@ -93,6 +93,27 @@ class OutReachAutomationNodes:
         ) = research_lead_on_linkedin(lead_data.name, lead_data.company)
         lead_data.profile = lead_profile
 
+        # If LinkedIn failed to get company info, try to search for company information
+        if not company_name and lead_data.company:
+            print(Fore.YELLOW + "----- LinkedIn failed, searching for company information -----\n" + Style.RESET_ALL)
+            # Use the company name from the lead data as fallback
+            company_name = lead_data.company.strip()
+            
+            # Search for company website
+            try:
+                from sample_agent.tools.company_research import google_search
+                search_results = google_search(f"{company_name} official website")
+                if search_results:
+                    # Extract the first result that looks like a company website
+                    for result in search_results:
+                        link = result.get('link', '')
+                        if any(domain in link.lower() for domain in ['.com', '.org', '.net', '.io']) and not any(exclude in link.lower() for exclude in ['linkedin.com', 'facebook.com', 'twitter.com']):
+                            company_website = link
+                            break
+            except Exception as e:
+                print(f"Error searching for company website: {e}")
+                company_website = ""
+
         # Use company info from research_lead_on_linkedin directly
         company_data.name = company_name
         company_data.website = company_website
@@ -116,6 +137,24 @@ class OutReachAutomationNodes:
         company_data = state.get("company_data")
         
         company_website = company_data.website
+        
+        # If no website but we have company name, try to find it
+        if not company_website and company_data.name:
+            print(Fore.YELLOW + "----- No website found, searching for company website -----\n" + Style.RESET_ALL)
+            try:
+                from sample_agent.tools.company_research import google_search
+                search_results = google_search(f"{company_data.name} official website")
+                if search_results:
+                    # Extract the first result that looks like a company website
+                    for result in search_results:
+                        link = result.get('link', '')
+                        if any(domain in link.lower() for domain in ['.com', '.org', '.net', '.io']) and not any(exclude in link.lower() for exclude in ['linkedin.com', 'facebook.com', 'twitter.com']):
+                            company_website = link
+                            company_data.website = link
+                            break
+            except Exception as e:
+                print(f"Error searching for company website: {e}")
+        
         if company_website:
             # Scrape company website
             content = scrape_website_to_markdown(company_website)
@@ -247,19 +286,25 @@ class OutReachAutomationNodes:
         # Load states
         company_data = state["company_data"]
         
+        # Use company name for news search, fallback to lead's company if company_data.name is empty
+        company_name = company_data.name if company_data.name else state.get("current_lead", {}).get("company", "")
+        
         # Fetch recent news using serper API
-        recent_news = get_recent_news(company=company_data.name)
+        recent_news = get_recent_news(company=company_name) if company_name else ""
         number_months = 6
         current_date = get_current_date()
         news_analysis_prompt = NEWS_ANALYSIS_PROMPT.format(
-            company_name=company_data.name, 
+            company_name=company_name, 
             number_months=number_months, 
             date=current_date
         )
         
         # Only call LLM if recent_news is not empty and not an error
         if not recent_news or recent_news.strip() == "" or recent_news.startswith("Error fetching news"):
-            news_insight = "No recent news found for this company in the last 6 months."
+            if company_name:
+                news_insight = f"No recent news found for {company_name} in the last 6 months."
+            else:
+                news_insight = "No company name available for news search."
         else:
             news_insight = invoke_llm(
                 system_prompt=news_analysis_prompt, 
@@ -643,4 +688,4 @@ class OutReachAutomationNodes:
         state["reports"] = []
         print(Fore.YELLOW + f"----- CRM updated for lead: {state['current_lead'].id} -----\n" + Style.RESET_ALL)
         logger.info("CRM updated for lead: {}", state["current_lead"].id)
-        return {"number_leads": state["number_leads"] - 1}
+        return {}
