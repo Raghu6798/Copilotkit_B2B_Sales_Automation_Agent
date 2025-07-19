@@ -1,9 +1,33 @@
 "use client";
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useCoAgent } from "@copilotkit/react-core";
 import { CopilotChat } from "@copilotkit/react-ui";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-// --- TYPE DEFINITIONS ---
+// --- UI Components (Assumes a Shadcn/UI-like setup) ---
+// You would typically install these from a library like shadcn/ui
+// or create them yourself. For brevity, their implementation is omitted.
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Users,
+  Building,
+  FileText,
+  ClipboardCheck,
+  Link as LinkIcon,
+  Loader2,
+  List,
+} from "lucide-react";
+
+// --- TYPE DEFINITIONS (from your original file) ---
 // These interfaces must match the Pydantic models in your Python agent's state.
 
 interface SocialMediaLinks {
@@ -48,114 +72,188 @@ type GraphState = {
   custom_outreach_report_link: string;
   personalized_email: string;
   interview_script: string;
+  // CopilotKit provides the current step name from LangGraph
+  step?: string;
 };
 
+// --- Reusable UI Components ---
 
-/**
- * The main component for the B2B Sales Agent UI.
- * It combines a pre-built chat interface with a custom real-time status dashboard.
- */
-const SalesAgentPage: React.FC = () => {
+const StatusCard = ({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+}) => (
+  <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium text-gray-600">
+        {title}
+      </CardTitle>
+      <Icon className="h-4 w-4 text-gray-400" />
+    </CardHeader>
+    <CardContent>{children}</CardContent>
+  </Card>
+);
 
-  // This is the core hook for Generative UI. It subscribes to the agent's
-  // internal state updates and makes them available to your component.
-  // The 'state' object will be of type 'GraphState | undefined'.
-  const { state } = useCoAgent<GraphState>({
-    name: "sample_agent", // Must match your NEXT_PUBLIC_COPILOTKIT_AGENT_NAME
-  });
+const AgentStepper = ({ currentStep }: { currentStep?: string }) => {
+  const steps = useMemo(
+    () => [
+      { name: "get_new_leads", label: "Fetch Leads", phase: "Initialization" },
+      { name: "fetch_linkedin_profile_data", label: "Research Lead", phase: "Research" },
+      { name: "review_company_website", label: "Scan Website", phase: "Research" },
+      { name: "analyze_blog_content", label: "Analyze Blog", phase: "Research" },
+      { name: "analyze_social_media_content", label: "Check Socials", phase: "Research" },
+      { name: "analyze_recent_news", label: "Review News", phase: "Research" },
+      { name: "generate_full_lead_research_report", label: "Consolidate Research", phase: "Reporting" },
+      { name: "score_lead", label: "Score Lead", phase: "Qualification" },
+      { name: "generate_custom_outreach_report", label: "Build Outreach", phase: "Outreach" },
+      { name: "generate_personalized_email", label: "Draft Email", phase: "Outreach" },
+      { name: "generate_interview_script", label: "Prep Interview", phase: "Outreach" },
+      { name: "update_CRM", label: "Update CRM", phase: "Finalization" },
+    ],
+    []
+  );
+
+  const currentStepIndex = steps.findIndex((s) => s.name === currentStep);
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans text-gray-800">
-      
+    <Card className="bg-white shadow-md">
+      <CardHeader>
+        <CardTitle className="text-lg">Agent Progress</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ol className="relative border-l border-gray-200 dark:border-gray-700 ml-2">
+          {steps.map((step, index) => (
+            <li key={step.name} className="mb-6 ml-6">
+              <span className={`absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-4 ring-white ${
+                  index < currentStepIndex ? "bg-green-500" :
+                  index === currentStepIndex ? "bg-blue-500 animate-pulse" : "bg-gray-300"
+                }`}>
+              </span>
+              <h3 className="flex items-center mb-1 text-md font-semibold text-gray-900">
+                {step.label}
+                {index === currentStepIndex && <Badge variant="secondary" className="ml-2">In Progress</Badge>}
+              </h3>
+              <p className="block text-xs font-normal text-gray-500">{step.phase}</p>
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+    </Card>
+  );
+};
+
+// --- Main Page Component ---
+
+const SalesAgentPage: React.FC = () => {
+  const { state } = useCoAgent<GraphState>({ name: "sample_agent" });
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+
+  return (
+    <div className="grid md:grid-cols-12 gap-4 h-screen bg-gray-50 p-4 font-sans text-gray-800">
       {/* Left Panel: Real-Time Status Dashboard */}
-      <div className="w-2/5 p-6 bg-white shadow-lg overflow-y-auto flex flex-col gap-6 border-r">
-        <h1 className="text-2xl font-bold text-gray-700 border-b pb-2">Live Agent Status</h1>
+      <div className="md:col-span-5 lg:col-span-4 flex flex-col gap-4 overflow-y-auto pr-2">
+        <h1 className="text-3xl font-bold text-gray-800">B2B Sales Agent</h1>
         
-        {/* Number of Leads */}
-        <div className="p-4 bg-gray-50 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-800">Leads in Queue</h2>
-          <p className="mt-1 text-3xl font-bold text-center text-gray-600">
-            {state?.number_leads ?? 0}
-          </p>
+        {/* Agent Stepper - The star of the show! */}
+        <AgentStepper currentStep={state?.step} />
+
+        <div className="grid grid-cols-2 gap-4">
+            <StatusCard title="Leads in Queue" icon={List}>
+                <div className="text-2xl font-bold text-center text-gray-700">{state?.number_leads ?? 0}</div>
+            </StatusCard>
+            <StatusCard title="Lead Score" icon={ClipboardCheck}>
+              {state?.lead_score ? (
+                <div className="text-2xl font-bold text-center text-green-600">{state.lead_score} / 10</div>
+              ) : (
+                <div className="text-sm text-gray-500 text-center pt-2">Pending...</div>
+              )}
+            </StatusCard>
         </div>
-        
-        {/* Current Lead Card */}
-        <div className="p-4 bg-blue-50 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold text-blue-800">Current Lead</h2>
+
+        <StatusCard title="Current Lead" icon={Users}>
           {state?.current_lead ? (
-            <div className="mt-2 text-sm">
+            <div className="text-sm space-y-1">
               <p><strong>Name:</strong> {state.current_lead.name}</p>
               <p><strong>Company:</strong> {state.current_lead.company}</p>
               <p><strong>Email:</strong> {state.current_lead.email}</p>
             </div>
           ) : (
-            <p className="mt-2 text-sm text-gray-500">Waiting for a new lead...</p>
+             <p className="text-sm text-gray-500">Waiting for a new lead...</p>
           )}
-        </div>
+        </StatusCard>
 
-        {/* Lead Score Card */}
-        <div className="p-4 bg-green-50 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold text-green-800">Lead Score</h2>
-          {state?.lead_score ? (
-            <p className="mt-2 text-3xl font-bold text-center text-green-600">{state.lead_score} / 10</p>
-          ) : (
-            <p className="mt-2 text-sm text-gray-500">Not yet calculated.</p>
-          )}
-        </div>
-
-        {/* Generated Reports & Links */}
-        <div className="p-4 bg-purple-50 rounded-lg shadow-sm flex-grow">
-          <h2 className="text-lg font-semibold text-purple-800">Generated Assets</h2>
-          <div className="mt-2 space-y-3">
+        <StatusCard title="Generated Assets" icon={FileText}>
+           <div className="space-y-3">
              {state?.custom_outreach_report_link && (
-              <a href={state.custom_outreach_report_link} target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-purple-600 text-white font-bold py-2 px-4 rounded hover:bg-purple-700 transition-colors">
-                View Custom Outreach Report
-              </a>
+              <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700">
+                <a href={state.custom_outreach_report_link} target="_blank" rel="noopener noreferrer">
+                  <LinkIcon className="w-4 h-4 mr-2"/> View Outreach Report
+                </a>
+              </Button>
             )}
              {state?.reports_folder_link && (
-              <a href={state.reports_folder_link} target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-600 text-white font-bold py-2 px-4 rounded hover:bg-gray-700 transition-colors">
-                Open All Reports Folder
-              </a>
+              <Button asChild variant="outline" className="w-full">
+                <a href={state.reports_folder_link} target="_blank" rel="noopener noreferrer">
+                  <LinkIcon className="w-4 h-4 mr-2"/> Open All Reports
+                </a>
+              </Button>
             )}
-            <h3 className="text-md font-semibold pt-2">Reports Generated:</h3>
-            <ul className="list-disc list-inside text-sm space-y-1">
+            <h3 className="text-md font-semibold pt-2 border-t mt-3">Reports Log:</h3>
+            <ul className="text-sm space-y-1">
               {state?.reports && state.reports.length > 0 ? (
-                state.reports.map((report, index) => report && <li key={index}>{report.title}</li>)
+                state.reports.map((report, index) => report && (
+                  <li key={index}>
+                    <button onClick={() => setSelectedReport(report)} className="text-blue-600 hover:underline text-left">
+                      {report.title}
+                    </button>
+                  </li>
+                ))
               ) : (
                 <li className="text-gray-500">No reports generated yet.</li>
               )}
             </ul>
-          </div>
-        </div>
+           </div>
+        </StatusCard>
       </div>
 
       {/* Right Panel: Pre-built Chat Interface */}
-      <div className="w-3/5 flex flex-col p-6">
-        <div className="flex-grow flex flex-col bg-white rounded-lg shadow-md">
-          {/* 
-            The CopilotChat component handles all user input, message display,
-            and communication with the agent backend.
-          */}
+      <div className="md:col-span-7 lg:col-span-8 flex flex-col h-full">
           <CopilotChat
-            className="w-full h-full"
+            className="w-full h-full flex flex-col"
             labels={{
               initial: "Hello! I'm your B2B Sales Automation Agent. Type a command to begin.",
               placeholder: "e.g., 'Start processing new leads'",
             }}
             suggestions={[
               "Start processing new leads.",
-              "Begin the outreach automation.",
-              "Draft a structured Outreach Report for all the Leads from the CRM"
+              "Begin the outreach automation for all leads.",
             ]}
           />
-        </div>
       </div>
+
+      {/* Report Viewer Modal */}
+      <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{selectedReport?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="prose max-w-none overflow-y-auto">
+            {selectedReport?.is_markdown ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedReport.content}</ReactMarkdown>
+            ) : (
+                <pre className="whitespace-pre-wrap">{selectedReport?.content}</pre>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-// Your page.tsx simply renders the main component.
-// It assumes the <CopilotKit> provider is in layout.tsx.
 export default function Page() {
   return <SalesAgentPage />;
 }
