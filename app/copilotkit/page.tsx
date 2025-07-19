@@ -226,10 +226,6 @@ const SalesAgentPage: React.FC = () => {
               initial: "Hello! I'm your B2B Sales Automation Agent. Type a command to begin.",
               placeholder: "e.g., 'Start processing new leads'",
             }}
-            suggestions={[
-              "Start processing new leads.",
-              "Begin the outreach automation for all leads.",
-            ]}
           />
       </div>
 
