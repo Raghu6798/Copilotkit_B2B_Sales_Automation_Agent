@@ -2,9 +2,20 @@ import os
 from dotenv import load_dotenv
 import json
 import requests
-
+from loguru import logger
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_log, after_log
 
 load_dotenv()
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=8),
+    retry=retry_if_exception_type(Exception),
+    before=before_log(logger, "INFO"),
+    after=after_log(logger, "ERROR")
+)
+def _execute_with_retry(request_func, *args, **kwargs):
+    return request_func(*args, **kwargs)
 
 def google_search(query):
     """
@@ -16,7 +27,7 @@ def google_search(query):
         'X-API-KEY': os.getenv("SERPER_API_KEY"),
         'content-type': 'application/json'
     }
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = _execute_with_retry(requests.request, "POST", url, headers=headers, data=payload)
     results = response.json().get('organic', [])
     return results
 
@@ -37,7 +48,7 @@ def get_recent_news(company: str) -> str:
     }
     
     # Make the POST request to the API
-    response = requests.post(url, headers=headers, data=payload)
+    response = _execute_with_retry(requests.post, url, headers=headers, data=payload)
     
     # Check if the response is successful
     if response.status_code == 200:
