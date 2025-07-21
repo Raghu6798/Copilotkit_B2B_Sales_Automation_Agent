@@ -1,5 +1,7 @@
 import re, os
 import googleapiclient.discovery
+from loguru import logger
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_log, after_log
 
 def extract_channel_name(url):
     # Regular expression to extract the channel name after '@'
@@ -20,11 +22,21 @@ def get_channel_id_by_name(channel_name):
         type="channel",
         maxResults=1
     )
-    response = request.execute()
+    response = _execute_with_retry(request)
     if response["items"]:
         return response["items"][0]["id"]["channelId"]
     else:
         raise ValueError(f"No channel found with the name: {channel_name}")
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=8),
+    retry=retry_if_exception_type(Exception),
+    before=before_log(logger, "INFO"),
+    after=after_log(logger, "ERROR")
+)
+def _execute_with_retry(request):
+    return request.execute(num_retries=2)
 
 def get_channel_videos_stats(channel_id):
     """
@@ -38,7 +50,7 @@ def get_channel_videos_stats(channel_id):
         part="statistics",
         id=channel_id
     )
-    channel_response = channel_request.execute()
+    channel_response = _execute_with_retry(channel_request)
     total_videos = int(channel_response["items"][0]["statistics"]["videoCount"])
     subscriber_count = int(channel_response["items"][0]["statistics"]["subscriberCount"])
 
@@ -50,7 +62,7 @@ def get_channel_videos_stats(channel_id):
         maxResults=15,
         order="date"  # Sort by date to get the latest videos
     )
-    videos_response = videos_request.execute()
+    videos_response = _execute_with_retry(videos_request)
 
     videos_data = []
     for item in videos_response["items"]:
@@ -72,7 +84,7 @@ def get_channel_videos_stats(channel_id):
             maxResults=50,
             pageToken=page_token
         )
-        search_response = search_request.execute()
+        search_response = _execute_with_retry(search_request)
 
         all_video_ids += [
             item["id"]["videoId"]
@@ -94,7 +106,7 @@ def get_channel_videos_stats(channel_id):
             part="statistics",
             id=",".join(chunk)
         )
-        stats_response = stats_request.execute()
+        stats_response = _execute_with_retry(stats_request)
 
         for item in stats_response["items"]:
             stats = item["statistics"]
