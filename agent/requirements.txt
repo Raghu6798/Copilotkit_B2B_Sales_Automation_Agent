@@ -4,12 +4,12 @@ langchain-anthropic
 langchain
 openai
 langchain-community
-copilotkit==0.1.55
+copilotkit
 uvicorn
 python-dotenv
 langchain-core
 langgraph-cli[inmem]
-langgraph== 0.5.3
+langgraph
 langchain-google-genai
 google-auth-oauthlib
 html2text
