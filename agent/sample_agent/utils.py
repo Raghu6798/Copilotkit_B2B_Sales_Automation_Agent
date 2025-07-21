@@ -143,6 +143,3 @@ def invoke_llm(
     return output
 
 
-if __name__=="__main__":
-    get_google_credentials()
-
