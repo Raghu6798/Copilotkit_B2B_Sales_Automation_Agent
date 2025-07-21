@@ -1,6 +1,18 @@
 from pyairtable import Table
 from pyairtable.formulas import match
 from .lead_loader_base import LeadLoaderBase
+from loguru import logger
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_log, after_log
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=8),
+    retry=retry_if_exception_type(Exception),
+    before=before_log(logger, "INFO"),
+    after=after_log(logger, "ERROR")
+)
+def _execute_with_retry(func, *args, **kwargs):
+    return func(*args, **kwargs)
 
 class AirtableLeadLoader(LeadLoaderBase):
     def __init__(self, access_token, base_id, table_name):
@@ -15,7 +27,7 @@ class AirtableLeadLoader(LeadLoaderBase):
         if lead_ids:
             leads = []
             for lead_id in lead_ids:
-                record = self.table.get(lead_id)
+                record = _execute_with_retry(self.table.get, lead_id)
                 if record:
                     # Merge id and fields into a single dictionary
                     lead = {"id": record["id"], **record.get("fields", {})}
@@ -24,7 +36,7 @@ class AirtableLeadLoader(LeadLoaderBase):
         else:
             # Fetch leads by status filter (based on "Status" field)
             # You can choose your own field for filter with different naming
-            records = self.table.all(formula=match({"Status": status_filter}))
+            records = _execute_with_retry(self.table.all, formula=match({"Status": status_filter}))
             return [
                 {"id": record["id"], **record.get("fields", {})}
                 for record in records
@@ -42,7 +54,7 @@ class AirtableLeadLoader(LeadLoaderBase):
             dict: The updated record from Airtable.
         """
         # Fetch the current record to ensure it exists and get its fields
-        record = self.table.get(lead_id)
+        record = _execute_with_retry(self.table.get, lead_id)
         if not record:
             raise ValueError(f"Record with ID {lead_id} not found.")
         
@@ -51,5 +63,5 @@ class AirtableLeadLoader(LeadLoaderBase):
         updated_fields = {**current_fields, **updates}
 
         # Update the record in Airtable
-        return self.table.update(lead_id, updated_fields)
+        return _execute_with_retry(self.table.update, lead_id, updated_fields)
 
