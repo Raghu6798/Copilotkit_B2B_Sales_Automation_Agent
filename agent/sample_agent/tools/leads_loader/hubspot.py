@@ -2,8 +2,20 @@ import os
 import hubspot
 from hubspot.crm.contacts import SimplePublicObjectInput, ApiException
 from lead_loader_base import LeadLoaderBase
+from loguru import logger
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_log, after_log
 
 HUBSPOT_CONTACTS_PROPERTIES = ["email", "firstname", "lastname", "hs_lead_status", "address", "phone"]
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=8),
+    retry=retry_if_exception_type(Exception),
+    before=before_log(logger, "INFO"),
+    after=after_log(logger, "ERROR")
+)
+def _execute_with_retry(func, *args, **kwargs):
+    return func(*args, **kwargs)
 
 class HubSpotLeadLoader(LeadLoaderBase):
     def __init__(self, access_token=None):
@@ -19,7 +31,7 @@ class HubSpotLeadLoader(LeadLoaderBase):
             if lead_ids:
                 leads = []
                 for lead_id in lead_ids:
-                    contact = self.client.crm.contacts.basic_api.get_by_id(
+                    contact = _execute_with_retry(self.client.crm.contacts.basic_api.get_by_id,
                         contact_id=lead_id,
                         properties=HUBSPOT_CONTACTS_PROPERTIES
                     )
@@ -31,7 +43,7 @@ class HubSpotLeadLoader(LeadLoaderBase):
             else:
                 # Fetch leads by status filter (based on "Status" field)
                 # You can choose your own field for filter with different naming
-                api_response = self.client.crm.contacts.basic_api.get_page(
+                api_response = _execute_with_retry(self.client.crm.contacts.basic_api.get_page,
                     limit=100,
                     properties=HUBSPOT_CONTACTS_PROPERTIES,
                     archived=False,
@@ -55,7 +67,7 @@ class HubSpotLeadLoader(LeadLoaderBase):
             simple_public_object_input = SimplePublicObjectInput(properties=properties)
             
             # Update the record in HubSpot
-            self.client.crm.contacts.basic_api.update(
+            _execute_with_retry(self.client.crm.contacts.basic_api.update,
                 contact_id=lead_id, simple_public_object_input=simple_public_object_input
             )
             return {"lead_id": lead_id, "updated_fields": fields_to_update}
